@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestionApi", "QuestionApi\QuestionApi.csproj", "{2773EDB9-C9FF-4F15-8459-8ED205B9F9F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizApi", "QuizApi\QuizApi.csproj", "{2773EDB9-C9FF-4F15-8459-8ED205B9F9F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

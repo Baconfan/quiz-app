@@ -1,6 +1,7 @@
-﻿using QuestionApi.Models;
+﻿using QuizApi.Entities;
+using QuizApi.Models;
 
-namespace QuestionApi.Persistence;
+namespace QuizApi.Persistence;
 
 public interface IQuestionRepository
 {

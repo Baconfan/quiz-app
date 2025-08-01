@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace QuestionApi.Models;
+namespace QuizApi.Entities;
 
 public class Question
 {
@@ -13,7 +13,7 @@ public class Question
     public required string QuestionText { get; set; }
     
     [BsonElement("type")]
-    public required string QuestionType { get; set; }
+    public required List<string> QuestionType { get; set; } = [];
 
     [BsonElement("correctAnswers")]
     public List<string> CorrectAnswers { get; set; } = [];

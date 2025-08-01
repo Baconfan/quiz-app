@@ -1,4 +1,4 @@
-﻿namespace QuestionApi.Models;
+﻿namespace QuizApi.Models;
 
 public class QuestionCatalogueDatabaseSettings
 {

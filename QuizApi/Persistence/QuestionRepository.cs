@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using QuestionApi.Models;
+using QuizApi.Entities;
+using QuizApi.Models;
 
-namespace QuestionApi.Persistence;
+namespace QuizApi.Persistence;
 
 public class QuestionRepository : IQuestionRepository
 {
