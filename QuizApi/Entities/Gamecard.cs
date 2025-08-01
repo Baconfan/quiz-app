@@ -24,39 +24,55 @@ public class Gamecard
     /// </summary>
     [BsonElement("clues")]
     public List<Clue>? Clues { get; set; }
-
+    
     /// <summary>
     /// optional clues to help the players, when they are stuck
     /// </summary>
+    [BsonElement("optionalClue")]
     public string? OptionalClue { get; set; }
     
     /// <summary>
     /// choices for the players
     /// </summary>
+    [BsonElement("possibleAnswers")]
     public PossibleAnswers? PossibleAnswers { get; set; }
 }
 
 public class PossibleAnswers
 {
-    public List<Answer>? CorrectAnswer { get; set; }
+    [BsonElement("correctAnswers")]
+    public List<Answer>? CorrectAnswers { get; set; }
+    
+    [BsonElement("wrongAnswers")]
     public List<Answer>? WrongAnswers { get; set; }
 
     /// <summary>
     /// Should the answers be clicked or conveyed orally?
     /// </summary>
+    [BsonElement("clickable")]
     public bool AreClickable { get; set; } = false;
 }
 
 public class Answer
 {
+    [BsonElement("textAnswer")]
     public string TextAnswer { get; set; } = "";
+    
+    [BsonElement("answerImageLink")]
     public string? ImageLink { get; set; }
+    
+    [BsonElement("answerSoundLink")]
     public string? SoundLink { get; set; } 
+    
+    [BsonElement("explanation")]
     public string? Explanation { get; set; }
 }
 
 public class Clue
 {
+    [BsonElement("clueText")]
     public string ClueText { get; set; } = "";
+    
+    [BsonElement("clueImageLink")]
     public string? ClueImageLink { get; set; } = "";
 }
