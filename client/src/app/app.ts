@@ -1,12 +1,11 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import {Nav} from '../layout/nav/nav';
 import {AccountService} from '../core/services/account-service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Nav],
+  imports: [Nav],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -16,11 +15,6 @@ export class App implements OnInit {
   protected readonly title = signal('client');
 
   ngOnInit(): void {
-    this.http.get('http://localhost:5146/api/question/all').subscribe({
-      next: response => console.log(response),
-      error: error => console.log(error),
-      complete: () => console.log('Completed')
-    });
     this.setCurrectUser();
   }
 
