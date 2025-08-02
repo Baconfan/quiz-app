@@ -43,10 +43,8 @@ public class AccountController: BaseApiController
         }
         catch (Exception e)
         {
-            return Unauthorized(e.Message);
+            return Unauthorized("Kombination stimmt nicht.");
         }
     }
-
-
 
 }

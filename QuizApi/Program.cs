@@ -16,6 +16,8 @@ builder.Services.AddControllers();
 
 builder.Services.Configure<QuestionCatalogueDatabaseSettings>(
     builder.Configuration.GetSection("QuestionCatalogueDatabase"));
+builder.Services.Configure<QuizboardsDatabaseSettings>(
+    builder.Configuration.GetSection("QuizboardsDatabase"));
 builder.Services.Configure<AccountDatabaseSettings>(
     builder.Configuration.GetSection("AccountDatabase"));
 
@@ -23,6 +25,7 @@ builder.Services.AddCors();
 
 builder.Services.AddSingleton<IQuestionRepository, QuestionRepository>();
 builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
+builder.Services.AddSingleton<IQuizboardRepository, QuizboardRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -46,7 +49,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-app.UseCors(options => options.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:4200", "https://localhost:4200"));
+app.UseCors(options 
+    => options
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .WithOrigins("http://localhost:4200", "https://localhost:4200", "https://www.wir-sind-gbs.de"));
 
 app.UseAuthentication();
 app.UseAuthorization();

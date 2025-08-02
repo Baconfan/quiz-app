@@ -1,0 +1,28 @@
+<h1 class="text-4xl">Quizboard</h1>
+<div class>
+  <div class="flex flex-row ">
+  @for(c of columns; track $index; let idc = $index){
+
+      <div
+        class="flex card card-border bg-blue-500 w-50 h-30 m-3 items-center justify-center font-bold"
+        [attr.data-col] =  "idc"
+      >
+        {{c}}
+      </div>
+  }
+  </div>
+  @for(r of rows; track $index; let idr = $index){
+    <div class="flex flex-row">
+      @for(c of columns; track $index; let idc = $index){
+        <div
+          class="flex card card-border bg-blue-700 w-50 h-30 m-3 items-center justify-center"
+          [attr.data-row] = "idr"
+          [attr.data-col] =  "idc"
+        >
+          {{r}}
+        </div>
+      }
+    </div>
+  }
+</div>
+

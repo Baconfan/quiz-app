@@ -1,0 +1,12 @@
+.quiz-board {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.quiz-card{
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
