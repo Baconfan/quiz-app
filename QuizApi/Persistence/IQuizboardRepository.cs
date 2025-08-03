@@ -1,4 +1,5 @@
-﻿using QuizApi.Models;
+﻿using QuizApi.InputDto;
+using QuizApi.Models;
 
 namespace QuizApi.Persistence;
 
@@ -8,5 +9,7 @@ public interface IQuizboardRepository
     
     Task<QuizboardDto?> GetQuizboardById(string quizboardId);
     
-    Task<QuizboardDto> UpdateQuizboard(QuizboardDto quizboard);
+    Task UpdateQuizboardCategories(UpdateQuizboardCategoryDto dto);
+    
+    Task UpdateQuizboardValues(UpdateQuizboardValuesDto dto);
 }

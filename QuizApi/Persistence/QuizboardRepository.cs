@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using QuizApi.Entities;
+using QuizApi.InputDto;
 using QuizApi.Models;
 using Answer = QuizApi.Models.Answer;
 
@@ -21,48 +22,11 @@ public class QuizboardRepository: IQuizboardRepository
 
     public async Task<List<QuizboardDto>> GetAllQuizboards()
     {
-        var x = await _quizboardsCollection.Find(qb => true).ToListAsync();
-        if (x is null) return [];
-
-        var collectionToDto = x.Select(entry => new QuizboardDto
-        {
-            Id = entry.Id,
-            QuizboardTitle = entry.QuizboardTitle,
-            QuizboardDescription = entry.QuizboardDescription,
-            EditorIds = [1,2,3],
-            Categories = entry.Categories,
-            ValuesAscending = entry.ValuesAscending,
-            Gamecards = entry.Gamecards?.Select(x =>  new GamecardDto
-            {
-                QuizboardId = entry.Id ??
-                              throw new ArgumentNullException(entry.Id,
-                                  "QuizboardId darf nicht null sein."),
-                CategoryId = x.CategoryId,
-                ValueId = x.ValueId,
-                GameMode = x.GameMode,
-                EyecatcherTitle = x.EyecatcherTitle,
-                QuestionText = x.QuestionText,
-                Clues = null,
-                OptionalClue = x.OptionalClue,
-                PossibleAnswers = x.PossibleAnswers is not null 
-                    ? new PossibleAnswer
-                        {
-                            CorrectAnswers = x.PossibleAnswers.CorrectAnswers?.Select(ca => new Answer
-                            {
-                                TextAnswer = ca.TextAnswer,
-                                ImageLink = ca.ImageLink,
-                                SoundLink = ca.SoundLink,
-                                Explanation = ca.Explanation,
-                            }).ToList(),
-                            WrongAnswers = null,
-                            AreClickable = false
-                        } 
-                    : null,
-
-            }).ToList()
-        });
+        var allBoards = await _quizboardsCollection.Find(qb => true).ToListAsync();
         
-        return  collectionToDto.ToList();
+        return allBoards is null 
+            ? [] 
+            : allBoards.Select(TransformToDt).ToList();
     }
 
     public async Task<QuizboardDto?> GetQuizboardById(string quizboardId)
@@ -73,9 +37,20 @@ public class QuizboardRepository: IQuizboardRepository
         return TransformToDt(document);
     }
 
-    public async Task<QuizboardDto> UpdateQuizboard(QuizboardDto quizboard)
+    public async Task UpdateQuizboardCategories(UpdateQuizboardCategoryDto dto)
     {
-        throw new NotImplementedException();
+        var filter = Builders<Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+        var update = Builders<Quizboard>.Update.Set("categories", dto.NewCategories);
+
+        await _quizboardsCollection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task UpdateQuizboardValues(UpdateQuizboardValuesDto dto)
+    {
+        var filter = Builders<Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+        var update = Builders<Quizboard>.Update.Set("values", dto.NewValues);
+        
+        await _quizboardsCollection.UpdateOneAsync(filter, update);
     }
 
     private static QuizboardDto TransformToDt(Quizboard quizboardFromMongodb)
