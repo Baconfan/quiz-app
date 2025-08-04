@@ -14,16 +14,12 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddControllers();
 
-builder.Services.Configure<QuestionCatalogueDatabaseSettings>(
-    builder.Configuration.GetSection("QuestionCatalogueDatabase"));
 builder.Services.Configure<QuizboardsDatabaseSettings>(
     builder.Configuration.GetSection("QuizboardsDatabase"));
 builder.Services.Configure<AccountDatabaseSettings>(
     builder.Configuration.GetSection("AccountDatabase"));
 
 builder.Services.AddCors();
-
-builder.Services.AddSingleton<IQuestionRepository, QuestionRepository>();
 builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
 builder.Services.AddSingleton<IQuizboardRepository, QuizboardRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
