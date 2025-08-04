@@ -6,4 +6,5 @@ public class RegisterDto
     public required string Password { get; set; }
     public string DisplayName { get; set; } = "";
 
+    public string[] Roles { get; set; } = [];
 }
