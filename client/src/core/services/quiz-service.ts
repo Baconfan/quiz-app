@@ -2,6 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {QuizBoard} from '../../types/quizboard';
 import {Gamecard} from '../../types/quizboard';
+import {catchError, map, Observable, of} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -10,14 +11,22 @@ export class QuizService {
   private http = inject(HttpClient);
   baseUrl = 'http://localhost:5146/api'
 
-  // Get Quizboard
   getAllQuizboards(): any {
     return this.http.get<QuizBoard>(`${this.baseUrl}/quizboard/all`);
   }
 
+  // temp api call
+  getFirstQuizboard(): Observable<QuizBoard | null> {
+    return this.http.get<QuizBoard[]>(`${this.baseUrl}/quizboard/all`).pipe(
+      map(([first]) => first ?? null),
+      catchError(err => {
+        console.error('Error loading quizboards', err );
+        return of(null)
+      }));
+  }
+
   getQuizboardById(quizboardId: string) {
-    const testId = "688dede0fb95d8750ac852d6";
-    return this.http.get<QuizBoard>(`${this.baseUrl}/quizboard/${testId}`);
+    return this.http.get<QuizBoard>(`${this.baseUrl}/quizboard/${quizboardId}`);
   }
 
   // Update category (column topic)
