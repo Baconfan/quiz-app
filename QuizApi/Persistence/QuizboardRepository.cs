@@ -1,26 +1,25 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using QuizApi.Entities;
+using Entity = QuizApi.Entities;
 using QuizApi.InputDto;
-using QuizApi.Models;
-using Answer = QuizApi.Models.Answer;
+using Model = QuizApi.Models;
 
 namespace QuizApi.Persistence;
 
 public class QuizboardRepository: IQuizboardRepository
 {
-    private readonly IMongoCollection<Quizboard> _quizboardsCollection;
+    private readonly IMongoCollection<Entity.Quizboard> _quizboardsCollection;
 
-    public QuizboardRepository(IOptions<QuizboardsDatabaseSettings> quizboardDatabaseSettings)
+    public QuizboardRepository(IOptions<Model.QuizboardsDatabaseSettings> quizboardDatabaseSettings)
     {
         var mongoClient = new MongoClient(quizboardDatabaseSettings.Value.ConnectionString);
         
         var mongoDatabase = mongoClient.GetDatabase(quizboardDatabaseSettings.Value.DatabaseName);
         
-        _quizboardsCollection = mongoDatabase.GetCollection<Quizboard>(quizboardDatabaseSettings.Value.QuizboardsCollectionName);
+        _quizboardsCollection = mongoDatabase.GetCollection<Entity.Quizboard>(quizboardDatabaseSettings.Value.QuizboardsCollectionName);
     }
 
-    public async Task<List<QuizboardDto>> GetAllQuizboards()
+    public async Task<List<Model.QuizboardDto>> GetAllQuizboards()
     {
         var allBoards = await _quizboardsCollection.Find(qb => true).ToListAsync();
         
@@ -29,33 +28,57 @@ public class QuizboardRepository: IQuizboardRepository
             : allBoards.Select(TransformToDt).ToList();
     }
 
-    public async Task<QuizboardDto?> GetQuizboardById(string quizboardId)
+    public async Task<Model.QuizboardDto?> GetQuizboardById(string quizboardId)
     {
-        var filter = Builders<Quizboard>.Filter.Where(qb => qb.Id == quizboardId);
+        var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == quizboardId);
         var document = await _quizboardsCollection.Find(filter).FirstOrDefaultAsync();
-        
-        return TransformToDt(document);
+
+        return document is null 
+            ? null 
+            : TransformToDt(document);
     }
 
     public async Task UpdateQuizboardCategories(UpdateQuizboardCategoryDto dto)
     {
-        var filter = Builders<Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
-        var update = Builders<Quizboard>.Update.Set("categories", dto.NewCategories);
+        var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+        var update = Builders<Entity.Quizboard>.Update.Set("categories", dto.NewCategories);
 
         await _quizboardsCollection.UpdateOneAsync(filter, update);
     }
 
     public async Task UpdateQuizboardValues(UpdateQuizboardValuesDto dto)
     {
-        var filter = Builders<Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
-        var update = Builders<Quizboard>.Update.Set("values", dto.NewValues);
+        var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+        var update = Builders<Entity.Quizboard>.Update.Set("values", dto.NewValues);
         
         await _quizboardsCollection.UpdateOneAsync(filter, update);
     }
 
-    private static QuizboardDto TransformToDt(Quizboard quizboardFromMongodb)
+    public async Task CreateNewQuizcard(Model.GamecardDto dto)
     {
-        var x = new QuizboardDto
+        var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+        var update = Builders<Entity.Quizboard>.Update.Push(qb => qb.Gamecards, TransformToGamecardDocument(dto));
+
+        await _quizboardsCollection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task UpdateQuizcard(Model.GamecardDto dto)
+    {
+        var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+        var update = Builders<Entity.Quizboard>.Update.Set("gamecards", TransformToGamecardDocument(dto));
+        
+        await _quizboardsCollection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task DeleteQuizcardById(DeleteQuizcardDto dto)
+    {
+        var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+        return;
+    }   
+
+    private static Model.QuizboardDto TransformToDt(Entity.Quizboard quizboardFromMongodb)
+    {
+        var x = new Model.QuizboardDto
         {
             Id = quizboardFromMongodb.Id,
             QuizboardTitle = quizboardFromMongodb.QuizboardTitle,
@@ -63,7 +86,7 @@ public class QuizboardRepository: IQuizboardRepository
             EditorIds = [],
             Categories = quizboardFromMongodb.Categories,
             ValuesAscending = quizboardFromMongodb.ValuesAscending,
-            Gamecards = quizboardFromMongodb.Gamecards?.Select(x =>  new GamecardDto
+            Gamecards = quizboardFromMongodb.Gamecards?.Select(x =>  new Model.GamecardDto
             {
                 QuizboardId = quizboardFromMongodb.Id ??
                               throw new ArgumentNullException(quizboardFromMongodb.Id,
@@ -73,26 +96,73 @@ public class QuizboardRepository: IQuizboardRepository
                 GameMode = x.GameMode,
                 EyecatcherTitle = x.EyecatcherTitle,
                 QuestionText = x.QuestionText,
-                Clues = null,
+                Clues = x.Clues?.Select(c => new Model.Clue
+                {
+                    ClueText = c.ClueText,
+                    ClueImageLink = c.ClueImageLink
+                }).ToList(),
                 OptionalClue = x.OptionalClue,
                 PossibleAnswers = x.PossibleAnswers is not null 
-                    ? new PossibleAnswer
+                    ? new Model.PossibleAnswer
                     {
-                        CorrectAnswers = x.PossibleAnswers.CorrectAnswers?.Select(ca => new Answer
-                        {
-                            TextAnswer = ca.TextAnswer,
-                            ImageLink = ca.ImageLink,
-                            SoundLink = ca.SoundLink,
-                            Explanation = ca.Explanation,
-                        }).ToList(),
-                        WrongAnswers = null,
-                        AreClickable = false
+                        CorrectAnswers = x.PossibleAnswers.CorrectAnswers?.Select(TransformAnswers).ToList(),
+                        WrongAnswers = x.PossibleAnswers.WrongAnswers?.Select(TransformAnswers).ToList(),
+                        AreClickable = x.PossibleAnswers.AreClickable
                     } 
-                    : null,
+                    : null
 
             }).ToList()
         };
 
         return x;
+
+        
+    }
+
+    private static Model.Answer TransformAnswers(Entity.Answer entity) =>
+        new()
+        {
+            TextAnswer = entity.TextAnswer,
+            ImageLink = entity.ImageLink,
+            SoundLink = entity.SoundLink,
+            Explanation = entity.Explanation
+        };
+
+    private static Entity.Gamecard TransformToGamecardDocument(Model.GamecardDto dto)
+    {
+        return new Entity.Gamecard
+        {
+            CategoryId = dto.CategoryId,
+            ValueId = dto.ValueId,
+            GameMode = dto.GameMode,
+            EyecatcherTitle = dto.EyecatcherTitle,
+            QuestionText = dto.QuestionText,
+            Clues = dto.Clues?.Select(c => new Entity.Clue
+            {
+                ClueText = c.ClueText,
+                ClueImageLink = c.ClueImageLink
+            }).ToList(),
+            OptionalClue = dto.OptionalClue,
+            PossibleAnswers = dto.PossibleAnswers is not null 
+                ? new Entity.PossibleAnswers
+                {
+                    CorrectAnswers = dto.PossibleAnswers.CorrectAnswers?.Select(TransformToAnswerDocument)
+                        .ToList(),
+                    WrongAnswers = dto.PossibleAnswers.WrongAnswers?.Select(TransformToAnswerDocument).ToList(),
+                    AreClickable = dto.PossibleAnswers.AreClickable,
+                }
+                : null
+        };
+    }
+
+    private static Entity.Answer TransformToAnswerDocument(Model.Answer dto)
+    {
+        return new Entity.Answer
+        {
+            TextAnswer = dto.TextAnswer,
+            ImageLink = dto.ImageLink,
+            SoundLink = dto.SoundLink,
+            Explanation = dto.Explanation
+        };
     }
 }
