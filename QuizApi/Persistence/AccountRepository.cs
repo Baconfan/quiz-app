@@ -29,11 +29,13 @@ public class AccountRepository: IAccountRepository
         {
             UserName = dto.Username,
             DisplayName = dto.DisplayName,
+            IsActive = true,
+            Roles = dto.Roles.ToList(),
             PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(dto.Password)),
-            PasswordSalt = hmac.Key
+            PasswordSalt = hmac.Key,
         };
 
-        _usersCollection.InsertOne(user);
+        await _usersCollection.InsertOneAsync(user);
         
         return user;
     }
