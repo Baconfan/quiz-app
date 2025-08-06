@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using Entity = QuizApi.Entities;
 using QuizApi.InputDto;
 using Model = QuizApi.Models;
@@ -65,14 +67,40 @@ public class QuizboardRepository: IQuizboardRepository
     public async Task UpdateQuizcard(Model.GamecardDto dto)
     {
         var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
-        var update = Builders<Entity.Quizboard>.Update.Set("gamecards", TransformToGamecardDocument(dto));
+
+        var arrayFilters = new List<ArrayFilterDefinition>
+        {
+            new BsonDocumentArrayFilterDefinition<Entity.Quizboard>(
+                new BsonDocument
+                {
+                    { "gamecards.categoryId", dto.CategoryId },
+                    { "gamecards.valueId", dto.ValueId }
+                })
+        };
         
-        await _quizboardsCollection.UpdateOneAsync(filter, update);
+        var update = Builders<Entity.Quizboard>.Update.Set(qb => qb.Gamecards.AllMatchingElements("gamecards"), TransformToGamecardDocument(dto));
+        
+        var updateOptions = new UpdateOptions { ArrayFilters = arrayFilters };
+        
+        await _quizboardsCollection.UpdateOneAsync(filter, update, updateOptions);
     }
 
     public async Task DeleteQuizcardById(DeleteQuizcardDto dto)
     {
         var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
+
+        var updateDefinition = Builders<Entity.Quizboard>
+            .Update
+            .PullFilter(
+                qb => qb.Gamecards, 
+                Builders<Entity.Gamecard>.Filter.And(
+                    Builders<Entity.Gamecard>.Filter.Eq(c => c.CategoryId, dto.CategoryId),
+                    Builders<Entity.Gamecard>.Filter.Eq(c => c.ValueId,    dto.ValueId)
+                )
+            );
+        
+        var result = await _quizboardsCollection.UpdateOneAsync(filter, updateDefinition);
+        
         return;
     }   
 
@@ -115,8 +143,6 @@ public class QuizboardRepository: IQuizboardRepository
         };
 
         return x;
-
-        
     }
 
     private static Model.Answer TransformAnswers(Entity.Answer entity) =>

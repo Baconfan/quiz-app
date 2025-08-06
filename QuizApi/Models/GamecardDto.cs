@@ -39,7 +39,7 @@ public class PossibleAnswer
     /// <summary>
     /// Should the answers be clicked or conveyed orally?
     /// </summary>
-    public bool AreClickable { get; set; } = false;
+    public bool AreClickable { get; set; }
 }
 
 public class Answer
