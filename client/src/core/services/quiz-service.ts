@@ -1,19 +1,21 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {QuizBoard} from '../../types/quizboard';
-import {Gamecard} from '../../types/quizboard';
+import {GamecardType, QuizBoard} from '../../types/quizboard';
 import {catchError, map, Observable, of} from 'rxjs';
+import {DataForUpsertCategory} from '../../types/dataForUpsertCategory';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuizService {
   private http = inject(HttpClient);
-  baseUrl = 'http://localhost:5146/api'
+  baseUrl = '/api'
 
+  /*
   getAllQuizboards(): any {
     return this.http.get<QuizBoard>(`${this.baseUrl}/quizboard/all`);
   }
+  */
 
   // temp api call
   getFirstQuizboard(): Observable<QuizBoard | null> {
@@ -29,21 +31,22 @@ export class QuizService {
     return this.http.get<QuizBoard>(`${this.baseUrl}/quizboard/${quizboardId}`);
   }
 
-  // Update category (column topic)
-
-  // Update pointValues (row values)
-
-
-  // Create new gamecard / fill gamecard
-  createNewGamecard(quizboardId: string, gamecard: Gamecard) {
-    // return this.http.post(`${this.baseUrl}/gamecard/new`, {gamecard})
+  // Update category (column = category)
+  upsertCategory(quizboardId: string, categoryId: number, newCategory: string) {
+    var dataForUpsert : DataForUpsertCategory = {quizboardId: quizboardId, categoryId: categoryId, newCategoryName: newCategory};
+    return this.http.put(`${this.baseUrl}/quizboard/category/upsert`, dataForUpsert);
   }
 
-  // Update gamecard by QuizboardId + (categoryId, valueId)
-  updateGamecard(quizboardId: string, gamecard: Gamecard) {
-    // return this.http.put(`${this.baseUrl}/gamecard/${quizboardId}`, {gamecard})
+  // TODO Update pointValues (row values)
+
+  upsertGamecard(gamecard: GamecardType) {
+    return this.http.put(`${this.baseUrl}/quizcard/upsert`, gamecard)
   }
 
-  // Delete gamecard
+  uploadImage(file: File){
+    const formData = new FormData();
+    formData.append('file', file);
 
+    return this.http.post(this.baseUrl + 'quizcard/add-image', formData);
+  }
 }

@@ -13,6 +13,12 @@ public class Gamecard
     [BsonElement("gameMode")]
     public string GameMode { get; set; } = "";
     
+    [BsonElement("isMultipleChoice")]
+    public bool IsMultipleChoice { get; set; } = false;
+
+    [BsonElement("questionImages")]
+    public List<CardImage>? QuestionImages { get; set; }
+
     [BsonElement("eyecatcher")]
     public string? EyecatcherTitle { get; set; }
 
@@ -23,7 +29,7 @@ public class Gamecard
     /// Clues when the gamemode calls for it
     /// </summary>
     [BsonElement("clues")]
-    public List<Clue>? Clues { get; set; }
+    public List<string>? Clues { get; set; }
     
     /// <summary>
     /// optional clues to help the players, when they are stuck
@@ -50,29 +56,32 @@ public class PossibleAnswers
     /// Should the answers be clicked or conveyed orally?
     /// </summary>
     [BsonElement("clickable")]
-    public bool AreClickable { get; set; } = false;
+    public bool AreClickable { get; set; }
 }
 
 public class Answer
 {
+    [BsonElement("position")]
+    public int? PositionNumber { get; set; }
+
     [BsonElement("textAnswer")]
     public string TextAnswer { get; set; } = "";
     
-    [BsonElement("answerImageLink")]
-    public string? ImageLink { get; set; }
+    [BsonElement("answerImageUrl")]
+    public string? ImageUrl{ get; set; }
     
-    [BsonElement("answerSoundLink")]
-    public string? SoundLink { get; set; } 
+    [BsonElement("answerSoundUrl")]
+    public string? SoundUrl { get; set; } 
     
     [BsonElement("explanation")]
     public string? Explanation { get; set; }
 }
 
-public class Clue
+public class CardImage
 {
-    [BsonElement("clueText")]
-    public string ClueText { get; set; } = "";
+    [BsonElement("imageUrl")]
+    public string ImageUrl { get; set; } = "";
     
-    [BsonElement("clueImageLink")]
-    public string? ClueImageLink { get; set; } = "";
+    [BsonElement("position")]
+    public int? PositionNumber { get; set; }
 }

@@ -17,9 +17,7 @@ public class QuizboardController: BaseApiController
     [HttpGet("all")]
     public async Task<List<QuizboardDto>> GetAllQuizboards() 
         =>  await _quizboardRepository.GetAllQuizboards();
-
-
-    // Get Quizboard By Id
+    
     [HttpGet("{id}")]
     public async Task<ActionResult<QuizboardDto>> GetQuizboardById(string id)
     {
@@ -27,16 +25,21 @@ public class QuizboardController: BaseApiController
         
         return matchingBoard is null
             ? NotFound($"Kein Board zur ID {id} gefunden")
-            : matchingBoard;
+            : Ok(matchingBoard);
     }
-
-    // Update Quizboard
-    [HttpPut("update/categories")]
-    public async Task<IActionResult> UpdateQuizboardCategories(UpdateQuizboardCategoryDto dto)
+    
+    [HttpPut("category/upsert")]
+    public async Task<IActionResult> UpsertQuizboardCategory(UpdateQuizboardCategoryDto dto)
     {
-        await _quizboardRepository.UpdateQuizboardCategories(dto);
+        await _quizboardRepository.UpsertQuizboardCategory(dto);
 
         return NoContent();
+    }
+
+    [HttpDelete("{quizboardId}/category/{categoryId:int}")]
+    public async Task<IActionResult> DeleteQuizboardCategory(string quizboardId, int categoryId)
+    {
+        return Ok();
     }
 
     [HttpPut("update/values")]

@@ -10,7 +10,9 @@ public interface IQuizboardRepository
     
     Task<QuizboardDto?> GetQuizboardById(string quizboardId);
     
-    Task UpdateQuizboardCategories(UpdateQuizboardCategoryDto dto);
+    Task UpsertQuizboardCategory(UpdateQuizboardCategoryDto dto);
+    
+    Task DeleteQuizboardCategory(string quizboardId, int categoryId);
     
     Task UpdateQuizboardValues(UpdateQuizboardValuesDto dto);
     
@@ -18,7 +20,9 @@ public interface IQuizboardRepository
     // Quizcards
     Task CreateNewQuizcard(GamecardDto dto);
 
-    Task UpdateQuizcard(GamecardDto dto);
+    Task UpsertQuizcard(GamecardDto dto);
     
     Task DeleteQuizcardById(DeleteQuizcardDto dto);
+    
+    Task AddImageToQuizcard(ImageUploadToGamecardDto dto);
 }

@@ -1,31 +1,41 @@
-<h1 class="text-4xl">Quizboard</h1>
-<div class>
-  @if (quizboard(); as qb){
-    <div class="flex flex-row ">
-      @for(c of qb.categories; track $index; let idc = $index){
 
+
+@if (quizboard(); as qb){
+  <h1 class="text-4xl">Quizboard "{{qb.quizboardTitle}}"</h1>
+  <div class="flex flex-row ">
+    @for(c of qb.categories; track $index; let idc = $index){
+
+      <div
+        class="flex card card-border bg-blue-500 w-50 h-30 m-3 items-center justify-center font-bold"
+        [attr.data-col] =  "idc"
+      >
+        <input type="text" class="input input-ghost text-center" [value]="c" (keyup.enter)="saveCategory($event.target.value, qb.id, idc)" (blur)="saveCategory($event.target.value, qb.id, idc)"/>
+
+      </div>
+    }
+  </div>
+  @for(r of qb.valuesAscending; track $index; let idr = $index){
+    <div class="flex flex-row">
+      @for(c of qb.categories; track $index; let idc = $index){
         <div
-          class="flex card card-border bg-blue-500 w-50 h-30 m-3 items-center justify-center font-bold"
-          [attr.data-col] =  "idc"
+          class="flex card card-border bg-blue-700 w-50 h-30 m-3 items-center justify-center"
+          [attr.data-row] = "idr"
+          [attr.data-col] = "idc"
         >
-          {{c}}
+          {{r}} <button type="button" class="btn" (click)="openCardEditor(idc, idr, c, r)">EDIT</button>
         </div>
       }
     </div>
-    @for(r of qb.valuesAscending; track $index; let idr = $index){
-      <div class="flex flex-row">
-        @for(c of qb.categories; track $index; let idc = $index){
-          <div
-            class="flex card card-border bg-blue-700 w-50 h-30 m-3 items-center justify-center"
-            [attr.data-row] = "idr"
-            [attr.data-col] =  "idc"
-          >
-            {{r}}
-          </div>
-        }
-      </div>
-    }
   }
+}@else{
+  <span>Board konnte nicht geladen werden. 😥</span>
+}
 
-</div>
+
+  <div class>
+
+  </div>
+
+
+
 

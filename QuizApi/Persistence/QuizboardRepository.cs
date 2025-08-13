@@ -40,18 +40,25 @@ public class QuizboardRepository: IQuizboardRepository
             : TransformToDt(document);
     }
 
-    public async Task UpdateQuizboardCategories(UpdateQuizboardCategoryDto dto)
+    public async Task UpsertQuizboardCategory(UpdateQuizboardCategoryDto dto)
     {
         var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
-        var update = Builders<Entity.Quizboard>.Update.Set("categories", dto.NewCategories);
+        var update = Builders<Entity.Quizboard>.Update.Set(qb => qb.Categories![dto.CategoryId], dto.NewCategoryName);
 
-        await _quizboardsCollection.UpdateOneAsync(filter, update);
+        await _quizboardsCollection.UpdateOneAsync(filter, update, new  UpdateOptions { IsUpsert = true });
+    }
+
+    public async Task DeleteQuizboardCategory(string quizboardId, int categoryId)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task UpdateQuizboardValues(UpdateQuizboardValuesDto dto)
     {
         var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
         var update = Builders<Entity.Quizboard>.Update.Set("values", dto.NewValues);
+        
+        
         
         await _quizboardsCollection.UpdateOneAsync(filter, update);
     }
@@ -64,7 +71,7 @@ public class QuizboardRepository: IQuizboardRepository
         await _quizboardsCollection.UpdateOneAsync(filter, update);
     }
 
-    public async Task UpdateQuizcard(Model.GamecardDto dto)
+    public async Task UpsertQuizcard(Model.GamecardDto dto)
     {
         var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == dto.QuizboardId);
 
@@ -77,12 +84,21 @@ public class QuizboardRepository: IQuizboardRepository
                     { "gamecards.valueId", dto.ValueId }
                 })
         };
+
+        var cardForUpsert = TransformToGamecardDocument(dto);
         
-        var update = Builders<Entity.Quizboard>.Update.Set(qb => qb.Gamecards.AllMatchingElements("gamecards"), TransformToGamecardDocument(dto));
+        var update = Builders<Entity.Quizboard>.Update.Set(qb => qb.Gamecards.AllMatchingElements("gamecards"), cardForUpsert);
         
-        var updateOptions = new UpdateOptions { ArrayFilters = arrayFilters };
+        var updateOptions = new UpdateOptions { ArrayFilters = arrayFilters, IsUpsert = true};
         
-        await _quizboardsCollection.UpdateOneAsync(filter, update, updateOptions);
+        var updateResult = await _quizboardsCollection.UpdateOneAsync(filter, update, updateOptions);
+
+        if (updateResult.ModifiedCount == 0)
+        {
+            var pushNew = Builders<Entity.Quizboard>.Update.Push(q => q.Gamecards, cardForUpsert);
+            
+            await _quizboardsCollection.UpdateOneAsync(filter, pushNew.SetOnInsert(q => q.Id, dto.QuizboardId));
+        }
     }
 
     public async Task DeleteQuizcardById(DeleteQuizcardDto dto)
@@ -99,14 +115,17 @@ public class QuizboardRepository: IQuizboardRepository
                 )
             );
         
-        var result = await _quizboardsCollection.UpdateOneAsync(filter, updateDefinition);
-        
-        return;
-    }   
+        await _quizboardsCollection.UpdateOneAsync(filter, updateDefinition);
+    }
+
+    public async Task AddImageToQuizcard(ImageUploadToGamecardDto dto)
+    {
+        throw new NotImplementedException();
+    }
 
     private static Model.QuizboardDto TransformToDt(Entity.Quizboard quizboardFromMongodb)
     {
-        var x = new Model.QuizboardDto
+        var outputModel = new Model.QuizboardDto
         {
             Id = quizboardFromMongodb.Id,
             QuizboardTitle = quizboardFromMongodb.QuizboardTitle,
@@ -122,36 +141,41 @@ public class QuizboardRepository: IQuizboardRepository
                 CategoryId = x.CategoryId,
                 ValueId = x.ValueId,
                 GameMode = x.GameMode,
-                EyecatcherTitle = x.EyecatcherTitle,
+                IsMultipleChoice = x.IsMultipleChoice,
+                EyecatcherTitle = x.EyecatcherTitle ?? "",
                 QuestionText = x.QuestionText,
-                Clues = x.Clues?.Select(c => new Model.Clue
-                {
-                    ClueText = c.ClueText,
-                    ClueImageLink = c.ClueImageLink
-                }).ToList(),
-                OptionalClue = x.OptionalClue,
+                QuestionImages = x.QuestionImages?.Select(TransformToCardImageModel).ToList() ?? [],
+                Clues = x.Clues ?? [],
+                OptionalClue = x.OptionalClue ?? "",
                 PossibleAnswers = x.PossibleAnswers is not null 
-                    ? new Model.PossibleAnswer
+                    ? new Model.PossibleAnswers
                     {
-                        CorrectAnswers = x.PossibleAnswers.CorrectAnswers?.Select(TransformAnswers).ToList(),
-                        WrongAnswers = x.PossibleAnswers.WrongAnswers?.Select(TransformAnswers).ToList(),
+                        CorrectAnswers = x.PossibleAnswers.CorrectAnswers?.Select(TransformAnswers).ToList() ?? [],
+                        WrongAnswers = x.PossibleAnswers.WrongAnswers?.Select(TransformAnswers).ToList() ?? [],
                         AreClickable = x.PossibleAnswers.AreClickable
                     } 
-                    : null
-
+                    : new Model.PossibleAnswers()
             }).ToList()
         };
 
-        return x;
+        return outputModel;
     }
 
     private static Model.Answer TransformAnswers(Entity.Answer entity) =>
         new()
         {
+            PositionNumber = entity.PositionNumber,
             TextAnswer = entity.TextAnswer,
-            ImageLink = entity.ImageLink,
-            SoundLink = entity.SoundLink,
-            Explanation = entity.Explanation
+            ImageUrl = entity.ImageUrl ?? "",
+            SoundUrl = entity.SoundUrl ?? "",
+            Explanation = entity.Explanation ?? ""
+        };
+
+    private static Model.CardImage TransformToCardImageModel(Entity.CardImage cardImageFromMongodb) =>
+        new()
+        {
+            ImageUrl = cardImageFromMongodb.ImageUrl,
+            PositionNumber = cardImageFromMongodb.PositionNumber
         };
 
     private static Entity.Gamecard TransformToGamecardDocument(Model.GamecardDto dto)
@@ -161,23 +185,19 @@ public class QuizboardRepository: IQuizboardRepository
             CategoryId = dto.CategoryId,
             ValueId = dto.ValueId,
             GameMode = dto.GameMode,
+            IsMultipleChoice = dto.IsMultipleChoice,
             EyecatcherTitle = dto.EyecatcherTitle,
             QuestionText = dto.QuestionText,
-            Clues = dto.Clues?.Select(c => new Entity.Clue
-            {
-                ClueText = c.ClueText,
-                ClueImageLink = c.ClueImageLink
-            }).ToList(),
+            Clues = dto.Clues.Count != 0 ? dto.Clues.ToList() : null,
             OptionalClue = dto.OptionalClue,
-            PossibleAnswers = dto.PossibleAnswers is not null 
-                ? new Entity.PossibleAnswers
+            PossibleAnswers =
+                new Entity.PossibleAnswers
                 {
-                    CorrectAnswers = dto.PossibleAnswers.CorrectAnswers?.Select(TransformToAnswerDocument)
+                    CorrectAnswers = dto.PossibleAnswers.CorrectAnswers.Select(TransformToAnswerDocument)
                         .ToList(),
-                    WrongAnswers = dto.PossibleAnswers.WrongAnswers?.Select(TransformToAnswerDocument).ToList(),
+                    WrongAnswers = dto.PossibleAnswers.WrongAnswers.Select(TransformToAnswerDocument).ToList(),
                     AreClickable = dto.PossibleAnswers.AreClickable,
                 }
-                : null
         };
     }
 
@@ -185,9 +205,10 @@ public class QuizboardRepository: IQuizboardRepository
     {
         return new Entity.Answer
         {
+            PositionNumber = dto.PositionNumber,
             TextAnswer = dto.TextAnswer,
-            ImageLink = dto.ImageLink,
-            SoundLink = dto.SoundLink,
+            ImageUrl = dto.ImageUrl,
+            SoundUrl = dto.SoundUrl,
             Explanation = dto.Explanation
         };
     }

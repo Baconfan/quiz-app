@@ -1,7 +1,7 @@
 export type User = {
-  id: string;
   displayName: string;
-  username: string;
+  userName: string;
+  imageUrl: string;
   token: string;
 }
 

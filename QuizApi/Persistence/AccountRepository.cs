@@ -32,7 +32,7 @@ public class AccountRepository: IAccountRepository
             IsActive = true,
             Roles = dto.Roles.ToList(),
             PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(dto.Password)),
-            PasswordSalt = hmac.Key,
+            PasswordSalt = hmac.Key
         };
 
         await _usersCollection.InsertOneAsync(user);

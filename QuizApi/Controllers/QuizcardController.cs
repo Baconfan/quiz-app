@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using QuizApi.Entities;
 using QuizApi.InputDto;
+using QuizApi.Interfaces;
 using QuizApi.Models;
 using QuizApi.Persistence;
 
 namespace QuizApi.Controllers;
 
-public class QuizcardController(IQuizboardRepository quizboardRepository) : BaseApiController
+public class QuizcardController(IQuizboardRepository quizboardRepository, IPhotoService photoService) : BaseApiController
 {
+    /*
     [HttpPost("new")]
     public async Task<IActionResult> InsertNewQuizcard([FromBody]GamecardDto dto)
     {
@@ -14,15 +17,15 @@ public class QuizcardController(IQuizboardRepository quizboardRepository) : Base
 
         return NoContent();
     }
+    */
     
-    [HttpPatch("update")]
-    public async Task<IActionResult> UpdateQuizcard([FromBody] GamecardDto dto)
+    [HttpPut("upsert")]
+    public async Task<IActionResult> UpsertQuizcard([FromBody] GamecardDto dto)
     {
-        await quizboardRepository.UpdateQuizcard(dto);
+        await quizboardRepository.UpsertQuizcard(dto);
         
         return NoContent();
     }
-    
     
     [HttpDelete("delete")]
     public async Task<IActionResult> DeleteQuizcard([FromBody] DeleteQuizcardDto dto)
@@ -31,5 +34,23 @@ public class QuizcardController(IQuizboardRepository quizboardRepository) : Base
         
         return NoContent();
     }
-    
+
+    [HttpPost("add-image")]
+    public async Task<ActionResult<QuizImage>> AddImage(IFormFile file)
+    {
+        var result = await photoService.UploadPhotoAsync(file);
+
+        if (result.Error != null)
+        {
+            return BadRequest(result.Error.Message);
+        }
+
+        var image = new QuizImage
+        {
+            Url = result.SecureUrl.AbsoluteUri,
+            PublicId = result.PublicId,
+        };
+
+        return image;
+    }
 }
