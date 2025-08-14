@@ -1,21 +1,17 @@
 ﻿using QuizApi.Enums;
-using QuizApi.Models;
 
-namespace QuizApi.InputDto;
+namespace QuizApi.Models;
 
-public class ImageUploadToGamecardDto
+public class ImageUploadForFacade
 {
-    public required IFormFile ToBeUploadedFile { get; set; }
+    public required Stream ToBeUploadedFile { get; set; }
 
-    /// <summary>
-    /// information to identify the quizcard the image belongs to
-    /// </summary>
+    public string FileName { get; set; } = "";
+    
     public required QuizcardIdentifier QuizcardId { get; set; }
 
     /// <summary>
     /// To which part of the quizcard does the image belong to? 
     /// </summary>
     public ImageUploadAssignment ImageAssigment { get; set; } = ImageUploadAssignment.NoAssigment;
-
 }
-

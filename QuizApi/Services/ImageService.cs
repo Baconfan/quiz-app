@@ -6,31 +6,26 @@ using QuizApi.Interfaces;
 
 namespace QuizApi.Services;
 
-public class PhotoService: IPhotoService
+public class ImageService: IImageService
 {
     private readonly Cloudinary _cloudinary;
     
-    public PhotoService(IOptions<CloudinarySettings> config)
+    public ImageService(IOptions<CloudinarySettings> config)
     {
         var account = new Account(config.Value.CloudName, config.Value.ApiKey, config.Value.ApiSecret);
         
         _cloudinary = new Cloudinary(account);
     }
     
-    public async Task<ImageUploadResult> UploadPhotoAsync(IFormFile file)
+    public async Task<ImageUploadResult> UploadImageAsync(Stream fileStream, string fileName)
     {
-        var uploadResult = new ImageUploadResult();
-
-        if (file.Length <= 0) return uploadResult;
-        
-        await using var stream = file.OpenReadStream();
         var uploadParams = new ImageUploadParams()
         {
-            File = new FileDescription(file.FileName, stream),
+            File = new FileDescription(fileName, fileStream),
             Transformation = new Transformation().Width(500).Height(500).Crop("fill"),
             Folder = "quiz-img"
         };
-        uploadResult = await _cloudinary.UploadAsync(uploadParams);
+        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
 
         return uploadResult;
     }
@@ -41,4 +36,11 @@ public class PhotoService: IPhotoService
         
         return await _cloudinary.DestroyAsync(deleteParams);
     }
+
+    // FOR DEBUGGING
+    public void PrintSettings()
+    {
+        Console.WriteLine(_cloudinary.GetConfig().CloudName);
+    }
+    
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QuizApi.Entities;
+using QuizApi.Enums;
+using QuizApi.Facades;
 using QuizApi.InputDto;
 using QuizApi.Interfaces;
 using QuizApi.Models;
@@ -7,7 +9,10 @@ using QuizApi.Persistence;
 
 namespace QuizApi.Controllers;
 
-public class QuizcardController(IQuizboardRepository quizboardRepository, IPhotoService photoService) : BaseApiController
+public class QuizcardController(
+    IQuizboardRepository quizboardRepository, 
+    IImageService imageService, 
+    IImageUploadFacade imageUploadFacade) : BaseApiController
 {
     /*
     [HttpPost("new")]
@@ -36,21 +41,21 @@ public class QuizcardController(IQuizboardRepository quizboardRepository, IPhoto
     }
 
     [HttpPost("add-image")]
-    public async Task<ActionResult<QuizImage>> AddImage(IFormFile file)
+    public async Task<ActionResult<QuizImageDto>> AddImage([FromForm]ImageUploadToGamecardDto imageUpload)
     {
-        var result = await photoService.UploadPhotoAsync(file);
-
-        if (result.Error != null)
+        await using var stream = imageUpload.ToBeUploadedFile.OpenReadStream();
+        var x = new ImageUploadForFacade
         {
-            return BadRequest(result.Error.Message);
-        }
-
-        var image = new QuizImage
-        {
-            Url = result.SecureUrl.AbsoluteUri,
-            PublicId = result.PublicId,
+            ToBeUploadedFile = stream,
+            FileName = imageUpload.ToBeUploadedFile.FileName,
+            QuizcardId = imageUpload.QuizcardId,
+            ImageAssigment = imageUpload.ImageAssigment
         };
-
-        return image;
+        
+        var result = await imageUploadFacade.UploadAndPersistImage(x);
+        
+        return result is null 
+            ? NoContent() 
+            : Ok(result);
     }
 }

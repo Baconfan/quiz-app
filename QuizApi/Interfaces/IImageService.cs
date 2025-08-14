@@ -3,8 +3,10 @@ using MongoDB.Driver;
 
 namespace QuizApi.Interfaces;
 
-public interface IPhotoService
+public interface IImageService
 {
-    Task<ImageUploadResult> UploadPhotoAsync(IFormFile file);
+    Task<ImageUploadResult> UploadImageAsync(Stream fileStream, string fileName);
     Task<DeletionResult> DeletePhotoAsync(string publicId);
+
+    void PrintSettings();
 }
