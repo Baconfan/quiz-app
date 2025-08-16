@@ -22,7 +22,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install
+      - name: Install dependencies
+        working-directory: client/src
         run: npm ci
 
       - name: Build (production)
