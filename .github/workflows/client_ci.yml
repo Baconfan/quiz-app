@@ -23,7 +23,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        working-directory: client/src
+        working-directory: client
         run: npm ci
 
       - name: Build (production)
