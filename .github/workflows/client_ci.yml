@@ -11,6 +11,12 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+       run:
+         working-directory: ./client/
+    strategy:
+       matrix:
+         node-version: [22.x]
 
     steps:
       - name: Checkout
@@ -19,11 +25,11 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: './client/package-lock.json'
 
       - name: Install dependencies
-        working-directory: client
         run: npm ci
 
       - name: Build (production)
