@@ -13,5 +13,7 @@ public class ImageUploadForFacade
     /// <summary>
     /// To which part of the quizcard does the image belong to? 
     /// </summary>
-    public ImageUploadAssignment ImageAssigment { get; set; } = ImageUploadAssignment.NoAssigment;
+    public ImageAssignment ImageAssigment { get; set; } = ImageAssignment.NoAssignment;
+    
+    public int? Position { get; set; }
 }

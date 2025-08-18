@@ -1,6 +1,5 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using QuizApi.Dtos.Input;
 using QuizApi.Entities;
 using QuizApi.Interfaces;
 using QuizApi.Models;
@@ -41,7 +40,7 @@ public class AccountController: BaseApiController
                 Token = _tokenService.CreateToken(userWithoutToken)
             };
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return Unauthorized("Kombination stimmt nicht.");
         }

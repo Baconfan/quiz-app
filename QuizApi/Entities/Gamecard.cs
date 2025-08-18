@@ -48,7 +48,13 @@ public class PossibleAnswers
 {
     [BsonElement("correctAnswers")]
     public List<Answer>? CorrectAnswers { get; set; }
-    
+
+    /// <summary>
+    /// Only for gamemode
+    /// </summary>
+    [BsonElement("correctAnswersStrings")]
+    public List<string>? CorrectAnswersTextList { get; set; }
+
     [BsonElement("wrongAnswers")]
     public List<Answer>? WrongAnswers { get; set; }
 

@@ -1,4 +1,5 @@
-﻿using QuizApi.InputDto;
+﻿using QuizApi.Dtos.Input;
+using QuizApi.Entities;
 using QuizApi.Models;
 
 namespace QuizApi.Persistence;
@@ -24,5 +25,7 @@ public interface IQuizboardRepository
     
     Task DeleteQuizcardById(DeleteQuizcardDto dto);
     
-    Task AddImageToQuizcard(ImageUploadToGamecardDto dto);
+    Task AddImageToQuizcard(AddQuizImageToQuizcardModel imageReference);
+
+    Task DeleteImageFromQuizcard();
 }

@@ -1,12 +1,10 @@
 ﻿using QuizApi.Enums;
 using QuizApi.Models;
 
-namespace QuizApi.InputDto;
+namespace QuizApi.Dtos.Input;
 
 public class ImageUploadToGamecardDto
 {
-    public required IFormFile ToBeUploadedFile { get; set; }
-
     /// <summary>
     /// information to identify the quizcard the image belongs to
     /// </summary>
@@ -15,7 +13,11 @@ public class ImageUploadToGamecardDto
     /// <summary>
     /// To which part of the quizcard does the image belong to? 
     /// </summary>
-    public ImageUploadAssignment ImageAssigment { get; set; } = ImageUploadAssignment.NoAssigment;
+    public ImageAssignment ImageAssignment { get; set; } = ImageAssignment.NoAssignment;
 
+    /// <summary>
+    /// Position in the array of the assigned property (e.g. ImageAssignment 1, ArrayPosition 0 -> First answer)
+    /// </summary>
+    public int? ArrayPosition { get; set; }
 }
 

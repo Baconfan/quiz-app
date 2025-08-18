@@ -1,8 +1,8 @@
 ﻿namespace QuizApi.Enums;
 
-public enum ImageUploadAssignment
+public enum ImageAssignment
 {
-    NoAssigment = 0,
+    NoAssignment = 0,
     QuestionImage = 1,
     CorrectAnswer = 2,
     WrongAnswer = 3

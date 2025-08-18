@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {GamecardType, QuizBoard} from '../../types/quizboard';
 import {catchError, map, Observable, of} from 'rxjs';
 import {DataForUpsertCategory} from '../../types/dataForUpsertCategory';
+import {ImageUploadMetaData} from '../../types/imageUploadToQuizcardDto';
 
 @Injectable({
   providedIn: 'root'
@@ -43,10 +44,11 @@ export class QuizService {
     return this.http.put(`${this.baseUrl}/quizcard/upsert`, gamecard)
   }
 
-  uploadImage(file: File){
+  uploadImage(file: File, metaData: ImageUploadMetaData){
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('metaData', JSON.stringify(metaData));
 
-    return this.http.post(this.baseUrl + 'quizcard/add-image', formData);
+    return this.http.post(`${this.baseUrl}/quizcard/add-image`, formData);
   }
 }

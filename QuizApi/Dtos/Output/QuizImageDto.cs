@@ -1,4 +1,4 @@
-﻿namespace QuizApi.Models;
+﻿namespace QuizApi.Dtos.Output;
 
 public class QuizImageDto
 {

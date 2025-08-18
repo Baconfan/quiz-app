@@ -1,5 +1,5 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit, output} from '@angular/core';
-import {FormsModule} from '@angular/forms';
+import {ChangeDetectionStrategy, Component, inject, OnInit, output, ViewChild} from '@angular/core';
+import {FormsModule, NgForm} from '@angular/forms';
 import {GamecardType, QuizBoard} from '../../types/quizboard';
 import {MatDialogRef, MAT_DIALOG_DATA, MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
@@ -7,13 +7,14 @@ import {QuizService} from '../../core/services/quiz-service';
 import {DataForCardEdit} from '../../types/dataForCardEdit';
 import {GameModeType} from '../../types/gamemode';
 import {filter, map, Observable, startWith, tap} from 'rxjs';
-import {AsyncPipe} from '@angular/common';
+import {AsyncPipe, NgOptimizedImage} from '@angular/common';
 import {ToastService} from '../../core/services/toast-service';
 import {ImageUpload} from '../../shared/image-upload/image-upload';
+import {ImageAssignment, ImageUploadMetaData} from '../../types/imageUploadToQuizcardDto';
 
 @Component({
   selector: 'app-gamecard',
-  imports: [FormsModule, MatDialogModule, MatButtonModule, AsyncPipe, ImageUpload],
+  imports: [FormsModule, MatDialogModule, MatButtonModule, AsyncPipe, ImageUpload, NgOptimizedImage],
   templateUrl: './gamecard.html',
   styleUrl: './gamecard.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -78,6 +79,8 @@ export class Gamecard implements OnInit {
   quizservice = inject(QuizService);
   toastService = inject(ToastService);
 
+  @ViewChild(ImageUpload) uploadComponent!: ImageUpload;
+
   ngOnInit(): void {
     /*
     this.quizservice
@@ -109,28 +112,41 @@ export class Gamecard implements OnInit {
         tap(card => this.gcard = card));
   }
 
-  saveEdit(){
-    console.log('Card was created!');
+  saveEdit(form: NgForm){
+    console.log('Card was updated!');
     this.quizservice.upsertGamecard(this.gcard).subscribe({
-      next: (res) => this.toastService.success('Änderungen gespeichert'),
+      next: () => {
+        this.toastService.success('Änderungen gespeichert');
+        this.dialogRef.close();
+      },
       error: (e) => {this.toastService.error('Fehler beim Speichern!'); console.log(e.message)},
-      complete: () => {this.dialogRef.close()}
     })
-
-    this.dialogRef.close();
   }
 
-  /*
-  addCorrectAnswerInput(){
-    this.gcard.possibleAnswers.correctAnswers.push(
-      {
-      textAnswer: '',
-      imageLink: "",
-      soundLink: "",
-      explanation: ""
-      });
+  onImageUpload(file: File) {
+    let metaData: ImageUploadMetaData = {
+      quizcardId: {
+        quizboardId: this.gcard.quizboardId,
+        categoryId: this.gcard.categoryId!,
+        valueId: this.gcard.valueId!
+      },
+      imageAssignment: ImageAssignment.QuestionImage,
+      arrayPosition: null
+    };
+
+    console.log("Metadata set!");
+    this.quizservice.uploadImage(file, metaData).subscribe({
+      next: () => {
+        this.toastService.success('Bild hochgeladen');
+        this.uploadComponent.clearPreview();
+      },
+      error: (e) => {this.toastService.error('Fehler beim Hochladen!'); console.log(e.message)}
+    });
   }
-  */
+
+  deleteImage(position: number){
+    console.log("Position: "+position);
+  }
 
   onGameModeChange(selected: string) {
     console.log('Game mode changed', selected);

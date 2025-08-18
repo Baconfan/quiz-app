@@ -44,6 +44,8 @@ public class PossibleAnswers
 {
     public List<Answer> CorrectAnswers { get; set; } = [];
 
+    public List<string> CorrectAnswersTextList { get; set; } = [];
+    
     public List<Answer> WrongAnswers { get; set; } = [];
 
     /// <summary>

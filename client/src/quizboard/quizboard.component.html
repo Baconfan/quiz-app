@@ -4,13 +4,16 @@
   <h1 class="text-4xl">Quizboard "{{qb.quizboardTitle}}"</h1>
   <div class="flex flex-row ">
     @for(c of qb.categories; track $index; let idc = $index){
-
       <div
         class="flex card card-border bg-blue-500 w-50 h-30 m-3 items-center justify-center font-bold"
         [attr.data-col] =  "idc"
       >
-        <input type="text" class="input input-ghost text-center" [value]="c" (keyup.enter)="saveCategory($event.target.value, qb.id, idc)" (blur)="saveCategory($event.target.value, qb.id, idc)"/>
-
+        <div class="tooltip">
+          <div class="tooltip-content">
+            <div class="animate-bounce text-orange-400 text-l font-black">Thema ändern</div>
+          </div>
+          <input type="text" class="input input-ghost text-center" [value]="c" (keyup.enter)="saveCategory($event.target.value, qb.id, idc)" (blur)="saveCategory($event.target.value, qb.id, idc)"/>
+        </div>
       </div>
     }
   </div>

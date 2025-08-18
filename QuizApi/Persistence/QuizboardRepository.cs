@@ -2,24 +2,19 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
+using QuizApi.Dtos.Input;
+using QuizApi.Enums;
 using Entity = QuizApi.Entities;
-using QuizApi.InputDto;
 using Model = QuizApi.Models;
 
 namespace QuizApi.Persistence;
 
-public class QuizboardRepository: IQuizboardRepository
+public class QuizboardRepository(
+    IMongoDatabase database,
+    IOptions<Model.QuizboardsDatabaseSettings> quizboardDatabaseSettings)
+    : IQuizboardRepository
 {
-    private readonly IMongoCollection<Entity.Quizboard> _quizboardsCollection;
-
-    public QuizboardRepository(IOptions<Model.QuizboardsDatabaseSettings> quizboardDatabaseSettings)
-    {
-        var mongoClient = new MongoClient(quizboardDatabaseSettings.Value.ConnectionString);
-        
-        var mongoDatabase = mongoClient.GetDatabase(quizboardDatabaseSettings.Value.DatabaseName);
-        
-        _quizboardsCollection = mongoDatabase.GetCollection<Entity.Quizboard>(quizboardDatabaseSettings.Value.QuizboardsCollectionName);
-    }
+    private readonly IMongoCollection<Entity.Quizboard> _quizboardsCollection = database.GetCollection<Entity.Quizboard>(quizboardDatabaseSettings.Value.QuizboardsCollectionName);
 
     public async Task<List<Model.QuizboardDto>> GetAllQuizboards()
     {
@@ -50,6 +45,9 @@ public class QuizboardRepository: IQuizboardRepository
 
     public async Task DeleteQuizboardCategory(string quizboardId, int categoryId)
     {
+        
+        
+        // renew index of existing cards
         throw new NotImplementedException();
     }
 
@@ -118,9 +116,56 @@ public class QuizboardRepository: IQuizboardRepository
         await _quizboardsCollection.UpdateOneAsync(filter, updateDefinition);
     }
 
-    public async Task AddImageToQuizcard(ImageUploadToGamecardDto dto)
+    public async Task AddImageToQuizcard(Model.AddQuizImageToQuizcardModel imageReference)
+    {
+        var filter = Builders<Entity.Quizboard>.Filter.Where(qb => qb.Id == imageReference.QuizcardId.QuizboardId);
+
+        var arrayFilters = new[]
+        {
+            new BsonDocumentArrayFilterDefinition<BsonDocument>(
+                new BsonDocument("gc.categoryId", imageReference.QuizcardId.CategoryId)
+                    .Add("gc.valueId", imageReference.QuizcardId.ValueId))
+        };
+        
+        await  _quizboardsCollection.UpdateOneAsync(filter, GetUpdateDefinition(imageReference), new UpdateOptions { ArrayFilters = arrayFilters});
+    }
+
+    public async Task DeleteImageFromQuizcard()
     {
         throw new NotImplementedException();
+    }
+
+    private static UpdateDefinition<Entity.Quizboard> GetUpdateDefinition(Model.AddQuizImageToQuizcardModel imageReference)
+    {
+        switch (imageReference.Assignment)
+        {
+            case ImageAssignment.CorrectAnswer:
+            {
+                var fieldPath = $"gamecards.$[gc].possibleAnswers.correctAnswers.{imageReference.Position}.answerImageUrl";
+
+                return Builders<Entity.Quizboard>.Update.Set(fieldPath, imageReference.Url);
+            }
+            case ImageAssignment.WrongAnswer:
+            {
+                var fieldPath = $"gamecards.$[gc].possibleAnswers.wrongAnswers.{imageReference.Position}.answerImageUrl";
+
+                return Builders<Entity.Quizboard>.Update.Set(fieldPath, imageReference.Url);
+            }
+            default:
+            {
+                // Image for Question
+                var newQuizcardImage = new Entity.CardImage
+                {
+                    ImageUrl = imageReference.Url,
+                    PositionNumber = null
+                };
+            
+                return Builders<Entity.Quizboard>.Update.Push(
+                    "gamecards.$[gc].questionImages",
+                    newQuizcardImage
+                );
+            }
+        }
     }
 
     private static Model.QuizboardDto TransformToDt(Entity.Quizboard quizboardFromMongodb)
@@ -150,10 +195,13 @@ public class QuizboardRepository: IQuizboardRepository
                 PossibleAnswers = x.PossibleAnswers is not null 
                     ? new Model.PossibleAnswers
                     {
-                        CorrectAnswers = x.PossibleAnswers.CorrectAnswers?.Select(TransformAnswers).ToList() ?? [],
-                        WrongAnswers = x.PossibleAnswers.WrongAnswers?.Select(TransformAnswers).ToList() ?? [],
+                        CorrectAnswers = x.PossibleAnswers.CorrectAnswers?.Select(TransformAnswers)
+                                             .ToList() ?? [],
+                        CorrectAnswersTextList = x.PossibleAnswers.CorrectAnswersTextList ?? [],
+                        WrongAnswers = x.PossibleAnswers.WrongAnswers?.Select(TransformAnswers)
+                                           .ToList() ?? [],
                         AreClickable = x.PossibleAnswers.AreClickable
-                    } 
+                    }
                     : new Model.PossibleAnswers()
             }).ToList()
         };
@@ -178,6 +226,13 @@ public class QuizboardRepository: IQuizboardRepository
             PositionNumber = cardImageFromMongodb.PositionNumber
         };
 
+    private static Entity.CardImage TransformToCardImageDocument(Model.CardImage dto) =>
+        new()
+        {
+            ImageUrl = dto.ImageUrl,
+            PositionNumber = dto.PositionNumber
+        };
+
     private static Entity.Gamecard TransformToGamecardDocument(Model.GamecardDto dto)
     {
         return new Entity.Gamecard
@@ -186,16 +241,21 @@ public class QuizboardRepository: IQuizboardRepository
             ValueId = dto.ValueId,
             GameMode = dto.GameMode,
             IsMultipleChoice = dto.IsMultipleChoice,
+            QuestionImages = dto.QuestionImages.Select(TransformToCardImageDocument).ToList(),
             EyecatcherTitle = dto.EyecatcherTitle,
             QuestionText = dto.QuestionText,
-            Clues = dto.Clues.Count != 0 ? dto.Clues.ToList() : null,
+            Clues = dto.Clues.Count != 0
+                ? dto.Clues.ToList()
+                : null,
             OptionalClue = dto.OptionalClue,
             PossibleAnswers =
                 new Entity.PossibleAnswers
                 {
                     CorrectAnswers = dto.PossibleAnswers.CorrectAnswers.Select(TransformToAnswerDocument)
                         .ToList(),
-                    WrongAnswers = dto.PossibleAnswers.WrongAnswers.Select(TransformToAnswerDocument).ToList(),
+                    CorrectAnswersTextList = dto.PossibleAnswers.CorrectAnswersTextList,
+                    WrongAnswers = dto.PossibleAnswers.WrongAnswers.Select(TransformToAnswerDocument)
+                        .ToList(),
                     AreClickable = dto.PossibleAnswers.AreClickable,
                 }
         };

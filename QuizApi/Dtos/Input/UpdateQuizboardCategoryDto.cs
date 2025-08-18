@@ -1,4 +1,4 @@
-﻿namespace QuizApi.InputDto;
+﻿namespace QuizApi.Dtos.Input;
 
 public record UpdateQuizboardCategoryDto
 {

@@ -53,4 +53,9 @@ export class ImageUpload {
       reader.onload = (e) => this.imageSrc.set(e.target?.result);
       reader.readAsDataURL(file);
     }
+
+    clearPreview() {
+      this.imageSrc.set(null);
+      this.fileToUpload = null;
+    }
 }

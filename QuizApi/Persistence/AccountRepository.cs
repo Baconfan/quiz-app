@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using QuizApi.Dtos.Input;
 using QuizApi.Entities;
 using QuizApi.Models;
 

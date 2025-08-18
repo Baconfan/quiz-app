@@ -7,6 +7,4 @@ public class QuizcardIdentifier
     public required int CategoryId { get; set; }
     
     public required int ValueId { get; set; }
-    
-    
 }

@@ -1,4 +1,5 @@
-﻿using QuizApi.Models;
+﻿using QuizApi.Dtos.Output;
+using QuizApi.Models;
 
 namespace QuizApi.Facades;
 

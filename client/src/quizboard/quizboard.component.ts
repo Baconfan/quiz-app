@@ -37,8 +37,8 @@ export class QuizboardComponent implements OnInit {
   openCardEditor(categoryId: number, valueId: number, categoryName: string, valuePoints: number){
     const dialogRef = this.dialog.open<Gamecard, DataForCardEdit, string>
     (Gamecard,
-      {width: '70vw',
-        maxWidth: '720px',
+      {width: '80vw',
+        maxWidth: '1000px',
         data: {
           quizboardId: this.quizboard()!.id,
           categoryId: categoryId,

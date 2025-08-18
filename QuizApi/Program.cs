@@ -1,7 +1,9 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using QuizApi.Facades;
 using QuizApi.Helpers;
 using QuizApi.Interfaces;
@@ -30,8 +32,22 @@ builder.Services.Configure<AccountDatabaseSettings>(
     builder.Configuration.GetSection("AccountDatabase"));
 
 builder.Services.AddCors();
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<QuizboardsDatabaseSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
+
+builder.Services.AddScoped(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<QuizboardsDatabaseSettings>>().Value;
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(settings.DatabaseName);
+});
+
 builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
-builder.Services.AddSingleton<IQuizboardRepository, QuizboardRepository>();
+builder.Services.AddScoped<IQuizboardRepository, QuizboardRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));

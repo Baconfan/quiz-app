@@ -5,3 +5,24 @@ option{
 select{
   background-color: #dcfce7;
 }
+
+.image-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.delete-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+}
+

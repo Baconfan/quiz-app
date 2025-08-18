@@ -1,4 +1,5 @@
-﻿using QuizApi.Entities;
+﻿using QuizApi.Dtos.Input;
+using QuizApi.Entities;
 using QuizApi.Models;
 
 namespace QuizApi.Persistence;

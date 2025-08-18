@@ -2,7 +2,7 @@
   @if(gamecard$ | async)
   {
     <div class="justify-center text-3xl text-primary">Karte bearbeiten - {{dataFromBoardComponent.categoryTitle}} {{dataFromBoardComponent.valueTitle}}</div>
-    <form #editCardForm="ngForm" class="gap-4 w-full" (ngSubmit)="saveEdit()">
+    <form #editCardForm="ngForm" class="gap-4 w-full">
       <mat-dialog-content>
         <div class="w-full grid grid-flow-row grid-cols-3 gap-4">
           <div class="col-span-1"><label>Aufhängetitel</label></div>
@@ -19,6 +19,7 @@
           </div>
           <div class="col-span-1"><label>Fragetext</label></div>
           <div class="col-span-2"><input autocomplete="off" type="text" class="input w-full bg-green-100" name="questionText" [(ngModel)] = "gcard.questionText"></div>
+
           <div class="col-span-1"><label>Hilfe für Spieler (opt.)</label></div>
           <div class="col-span-2"><input autocomplete="off" type="text" class="input w-full bg-green-100" name="optionalClue" [(ngModel)] = "gcard.optionalClue"></div>
           @if(
@@ -26,8 +27,28 @@
             gcard.gameMode === "guess1WordWithClues" ||
             gcard.gameMode === "guess1WordWithImages" ||
             gcard.gameMode === "guess1WordWithSounds"){
+            @if(gcard.gameMode === "guess1WordWithImages"){
+              <div class="col-span-1"><label>Bilder</label></div>
+              <div class="col-span-2" style="display: flex; gap: 8px;">
+                @for(imageItem of gcard.questionImages; track $index;){
+                  <div class="image-wrapper">
+                    <img [ngSrc]="imageItem.imageUrl" width="100" height="100" alt="Antwortbild"/>
+                    <button class="delete-btn" (click)="deleteImage($index)">✖</button>
+                  </div>
+                }
+              </div>
+              <div class="col-span-1">
+              </div>
+              <div class="col-span-2">
+                <app-image-upload (uploadFile)="onImageUpload($event)"/>
+              </div>
+            }
             <div class="col-span-1"><label>Richtige Antwort</label></div>
             <div class="col-span-2"><input autocomplete="off" type="text" class="input w-full bg-green-100" name="answer0" [(ngModel)] = "gcard.possibleAnswers.correctAnswers[0].textAnswer"></div>
+            <div class="col-span-1"></div>
+            <div class="col-span-2">
+                <app-image-upload (uploadFile)="onImageUpload($event)"></app-image-upload>
+            </div>
           }
           @if(gcard.gameMode === "guess1WordWithClues")
           {
@@ -58,26 +79,14 @@
           @if(gcard.gameMode === "guessMultipleWords")
           {
             <div class="col-span-1"><label>Passende Begriffe</label></div>
-            @for(ca of gcard.possibleAnswers.correctAnswers; track $index; let caId = $index){
-              @if(caId == 0){
-                <div class="col-span-2"><input autocomplete="off" type="text" class="input w-full bg-green-100" name="answer{{caId}}" [(ngModel)] = "gcard.possibleAnswers.correctAnswers[caId].textAnswer"></div>
-              } @else {
-                <div class="col-span-1"></div>
-                <div class="col-span-2"><input autocomplete="off" type="text" class="input w-full bg-green-100" name="answer{{caId}}" [(ngModel)] = "gcard.possibleAnswers.correctAnswers[caId].textAnswer"></div>
-              }
-            }
+            <div class="col-span-2"><textarea></textarea></div>
           }
         </div>
-        <!--
-        <div class="col-span-1"><label>Bilder</label></div>
-        <div class="col-span-1">
-          <app-image-upload/>
-        </div>
-        -->
+
       </mat-dialog-content>
       <mat-dialog-actions align="end" class="space-x-4">
         <button mat-dialog-close type="button" class="btn bg-red-400">Abbrechen</button>
-        <button class="btn bg-green-400" type="submit">Speichern</button>
+        <button class="btn bg-green-400" type="button" (click)="saveEdit(editCardForm)">Speichern</button>
       </mat-dialog-actions>
     </form>
   } @else {

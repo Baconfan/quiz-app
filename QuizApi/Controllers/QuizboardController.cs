@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using QuizApi.InputDto;
+using QuizApi.Dtos.Input;
 using QuizApi.Models;
 using QuizApi.Persistence;
 
